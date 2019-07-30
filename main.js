@@ -1,3 +1,4 @@
+"use strict";
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -80,7 +81,7 @@ var MultipleChoiceQuestion = /** @class */ (function (_super) {
     // test tostring
     MultipleChoiceQuestion.prototype.toString = function () {
         var _this = this;
-        return "Question: " + this.qText + "<br>\n                Answers:<br>\n                " + this.answers.map(function (item, i) { return "  \n                Answer number " + _this.answers[i] + ". /n\n                "; });
+        return "Question: " + this.qText + " /n\n                Answers: /n\n                " + this.answers.map(function (item, i) { return "  \n                Answer number " + _this.answers[i] + ". /n\n                "; });
     };
     MultipleChoiceQuestion.prototype.getCorrectAnswer = function () {
         var str = "Correct answer is: " + this.answers[this.correctAnswerIndex];
@@ -208,20 +209,19 @@ function main() {
     q2.addAnswer("South");
     cat.addQuestion(q2);
     // add more questions to the catalog
-    /*
-        let qnr: Questionnaire = new Questionnaire(5, QuestionsCatalog.BOTH);
-        console.log("Welcome to our questionnaire, its starts now!");
-        while (qnr.hasNext()) {
-            let q: Question = qnr.getNext();
-            console.log(q);
-            console.log("Your answer: ");
-            let answer: string = scan.nextLine();
-            qnr.checkAnswer(answer);
-        }
-        console.log("Thank you for participating in our test");
-        let correct: number = qnr.getCorrectAnswers();
-        let total: number = qnr.getTotalQuestions();
-        console.log("You've answered " + correct + " correct answers out of " +
-            total + " questions"); */
+    var qnr = new Questionnaire(5, QuestionsCatalog.BOTH);
+    console.log("Welcome to our questionnaire, its starts now!");
+    while (qnr.hasNext()) {
+        var q = qnr.getNext();
+        console.log(q);
+        console.log("Your answer: ");
+        var answer = scan.nextLine();
+        qnr.checkAnswer(answer);
+    }
+    console.log("Thank you for participating in our test");
+    var correct = qnr.getCorrectAnswers();
+    var total = qnr.getTotalQuestions();
+    console.log("You've answered " + correct + " correct answers out of " +
+        total + " questions");
 }
 main();
