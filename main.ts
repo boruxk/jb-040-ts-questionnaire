@@ -9,13 +9,13 @@ abstract class Question {
         this._qText = qText;
     }
 
-    toString() {
-        return this._qText;
+    public toString(): string {
+        let str = `Question: ${this.qText}`;
+        return str;
     }
 
     public abstract getCorrectAnswer(): string;
-    public abstract addCorrectAnswer(newAnswer: string): void;
-    addAnswer(arg0: string): void {};
+    public abstract addCorrectAnswer(answer: string): void;
 }
 
 class ShortAnswerQuestion extends Question {
@@ -26,31 +26,38 @@ class ShortAnswerQuestion extends Question {
         this.answer = answer;
     }
 
-    getCorrectAnswer(){
-        var str = `Answer: ${this.answer}`;
+    toString(): string {
+        let str = `${super.toString()}
+        Answer is: ${this.answer}`
         return str;
     }
+
+    getCorrectAnswer(){
+        return this.answer;
+    }
     
-    addCorrectAnswer(newAnswer: string): string{
-        return this.answer = newAnswer;
+    addCorrectAnswer(answer: string): string{
+        return this.answer = answer;
     }
 }
 
 class MultipleChoiceQuestion extends Question {
     answers: string[];
     private _numberOfAnswers: number;
+    correctAnswerIndex: number;
+
     get numberOfAnswers(): number {
         return this._numberOfAnswers;
     }
+    
     set numberOfAnswers(num: number) {
         if (num < 6) {
             this._numberOfAnswers = num;
         }
         else {
-            throw "Too much answers";
+            throw "error: too much answers";
         }
     }
-    correctAnswerIndex: number;
 
     constructor(qText: string, an: string) {
         super(qText);
@@ -66,19 +73,19 @@ class MultipleChoiceQuestion extends Question {
                 return `right answer is ${this.correctAnswerIndex}`
             }
         }
-    }
-// test tostring
-    toString() {
-        return `Question: ${this.qText} /n
-                Answers: /n
-                ${this.answers.map((item, i) => `  
-                Answer number ${this.answers[i]}. /n
-                `)}`;
-    }  
+    } 
+
+    toString(): string {
+        let str = `${super.toString()}
+        The answers are: `;
+        this.answers.forEach(an => {
+            str += an = "/n";
+        });
+        return str;
+    } 
 
     getCorrectAnswer() {
-        var str = `Correct answer is: ${this.answers[this.correctAnswerIndex]}`;
-        return str;
+        return this.answers[this.correctAnswerIndex];
     }
 
     addCorrectAnswer(newAnswer: string): string[] {
@@ -104,9 +111,10 @@ class QuestionsCatalog {
     get numberOfQuestions(): number {
         return this._numberOfQuestions;
     }
+
     set numberOfQuestions(num: number) {
         if (this._numberOfQuestions == 20) {
-            return; // if more the 20 -> pop() and throw error
+            throw "max number of questions reached";
         }
         this._numberOfQuestions = num;
     }
@@ -122,7 +130,10 @@ class QuestionsCatalog {
 
     public addQuestion(q: Question): void {
         if (this.questions.length < 20) {
-            this.questions.push(q);
+            this.questions[this._numberOfQuestions] = q;
+            this._numberOfQuestions++;
+        } else {
+            throw "max number of questions reached";
         }
     }
 
@@ -159,71 +170,78 @@ class QuestionsCatalog {
 }
 
 class Questionnaire {
-    arrQ: any[];
-    constructor(num: number, type: number){
-        let cat = new QuestionsCatalog();
-        this.arrQ = cat.generateQuestionnaire(num, type);
+    objQ: QuestionsCatalog;
+    private corentQ: number;
+    private rightA: number;
+
+    public constructor(num: number, type: number, cat: QuestionsCatalog){
+        this.objQ = cat;
+        this.objQ.generateQuestionnaire(num, type);
+        this.corentQ = 1;
+        this.rightA = 0;
     }
 
     public hasNext(): boolean {
-        for (let i = 0; i <= this.arrQ.length;i++){
-            if (i = this.arrQ.length) {
-                return false;
-            }
+        if (this.objQ.numberOfQuestions > this.corentQ + 1) {
+            return true;
         }
-        return true;
+        else {
+            return false;
+        }
     }
 
     public getNext(): Question {
-        for (let i = 0; i <= this.arrQ.length; i++) {
-            let nextQ: Question;
-            nextQ = this.arrQ[i];
-            return nextQ;
-        }
+        this.corentQ++;
+        return this.objQ.questions[this.corentQ - 1];
     }
 
-    public checkAnswer(answer: string): void {
-        this.arrQ.myAnswer = answer;
+    public checkAnswer(myAnswer: string): void {
+        debugger;
+        var rightAnswer = this.objQ.questions[this.corentQ - 1].getCorrectAnswer()
+        if (myAnswer == rightAnswer) {
+            this.rightA++;
+        }
+        if (this.objQ.numberOfQuestions > this.corentQ)
+        this.corentQ++;
     }
 
     public getTotalQuestions(): number {
-        return this.arrQ.length;
+        return this.corentQ;
+        
     }
 
     public getCorrectAnswers(): number {
-        let rightA = [];
-        for (let i = 0; i <= this.arrQ.length; i++) {
-            if (this.arrQ.myAnswer == this.arrQ.answers[0]){
-                rightA.push(i);
-            }
-        }
-        return rightA.length;
+        return this.rightA;
     }
 }
 
 function main() {
-    let cat: QuestionsCatalog = new QuestionsCatalog();
-    let q1: Question = new ShortAnswerQuestion("How much legs does the spider have?", "8");
+    var cat: QuestionsCatalog = new QuestionsCatalog();
+    var q1 = new ShortAnswerQuestion("How much legs does the spider have?", "8");
+    // q1.addCorrectAnswer("8");
     cat.addQuestion(q1);
-    let q2: Question = new MultipleChoiceQuestion("Where is the sun rise?", "East");
+    var q2 = new MultipleChoiceQuestion("Where is the sun rise?", "East");
     q2.addAnswer("West");
     q2.addAnswer("North");
     q2.addAnswer("South");
     cat.addQuestion(q2);
     // add more questions to the catalog
 
-    let qnr: Questionnaire = new Questionnaire(5, QuestionsCatalog.BOTH);
+    // my answers
+    var myAnswer = ["8", "East"];
+
+    var qnr: Questionnaire = new Questionnaire(5, QuestionsCatalog.BOTH, cat);
     console.log("Welcome to our questionnaire, its starts now!");
-    while (qnr.hasNext()) {
-        let q: Question = qnr.getNext();
+    for (var i = 0; i < qnr.getTotalQuestions(); i++){
+        var q: Question = qnr.objQ.questions[i];
         console.log(q);
-        console.log("Your answer: ");
-        let answer: string = scan.nextLine();
+        var answer: string = myAnswer[i];
         qnr.checkAnswer(answer);
+        console.log(`Your answer: ${answer}`);
     }
     console.log("Thank you for participating in our test");
-    let correct: number = qnr.getCorrectAnswers();
-    let total: number = qnr.getTotalQuestions();
+    var correct: number = qnr.getCorrectAnswers();
+    var total: number = qnr.getTotalQuestions();
     console.log("You've answered " + correct + " correct answers out of " +
         total + " questions"); 
 }

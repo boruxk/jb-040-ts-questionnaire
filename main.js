@@ -1,4 +1,3 @@
-"use strict";
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -24,10 +23,9 @@ var Question = /** @class */ (function () {
         configurable: true
     });
     Question.prototype.toString = function () {
-        return this._qText;
+        var str = "Question: " + this.qText;
+        return str;
     };
-    Question.prototype.addAnswer = function (arg0) { };
-    ;
     return Question;
 }());
 var ShortAnswerQuestion = /** @class */ (function (_super) {
@@ -37,12 +35,15 @@ var ShortAnswerQuestion = /** @class */ (function (_super) {
         _this.answer = answer;
         return _this;
     }
-    ShortAnswerQuestion.prototype.getCorrectAnswer = function () {
-        var str = "Answer: " + this.answer;
+    ShortAnswerQuestion.prototype.toString = function () {
+        var str = _super.prototype.toString.call(this) + "\n        Answer is: " + this.answer;
         return str;
     };
-    ShortAnswerQuestion.prototype.addCorrectAnswer = function (newAnswer) {
-        return this.answer = newAnswer;
+    ShortAnswerQuestion.prototype.getCorrectAnswer = function () {
+        return this.answer;
+    };
+    ShortAnswerQuestion.prototype.addCorrectAnswer = function (answer) {
+        return this.answer = answer;
     };
     return ShortAnswerQuestion;
 }(Question));
@@ -65,7 +66,7 @@ var MultipleChoiceQuestion = /** @class */ (function (_super) {
                 this._numberOfAnswers = num;
             }
             else {
-                throw "Too much answers";
+                throw "error: too much answers";
             }
         },
         enumerable: true,
@@ -78,14 +79,15 @@ var MultipleChoiceQuestion = /** @class */ (function (_super) {
             }
         }
     };
-    // test tostring
     MultipleChoiceQuestion.prototype.toString = function () {
-        var _this = this;
-        return "Question: " + this.qText + " /n\n                Answers: /n\n                " + this.answers.map(function (item, i) { return "  \n                Answer number " + _this.answers[i] + ". /n\n                "; });
+        var str = _super.prototype.toString.call(this) + "\n        The answers are: ";
+        this.answers.forEach(function (an) {
+            str += an = "/n";
+        });
+        return str;
     };
     MultipleChoiceQuestion.prototype.getCorrectAnswer = function () {
-        var str = "Correct answer is: " + this.answers[this.correctAnswerIndex];
-        return str;
+        return this.answers[this.correctAnswerIndex];
     };
     MultipleChoiceQuestion.prototype.addCorrectAnswer = function (newAnswer) {
         if (this.correctAnswerIndex < 6) {
@@ -115,7 +117,7 @@ var QuestionsCatalog = /** @class */ (function () {
         },
         set: function (num) {
             if (this._numberOfQuestions == 20) {
-                return; // if more the 20 -> pop() and throw error
+                throw "max number of questions reached";
             }
             this._numberOfQuestions = num;
         },
@@ -124,7 +126,11 @@ var QuestionsCatalog = /** @class */ (function () {
     });
     QuestionsCatalog.prototype.addQuestion = function (q) {
         if (this.questions.length < 20) {
-            this.questions.push(q);
+            this.questions[this._numberOfQuestions] = q;
+            this._numberOfQuestions++;
+        }
+        else {
+            throw "max number of questions reached";
         }
     };
     //num = number of q in output //type = s, m, b
@@ -163,45 +169,45 @@ var QuestionsCatalog = /** @class */ (function () {
     return QuestionsCatalog;
 }());
 var Questionnaire = /** @class */ (function () {
-    function Questionnaire(num, type) {
-        var cat = new QuestionsCatalog();
-        this.arrQ = cat.generateQuestionnaire(num, type);
+    function Questionnaire(num, type, cat) {
+        this.objQ = cat;
+        this.objQ.generateQuestionnaire(num, type);
+        this.corentQ = 1;
+        this.rightA = 0;
     }
     Questionnaire.prototype.hasNext = function () {
-        for (var i = 0; i <= this.arrQ.length; i++) {
-            if (i = this.arrQ.length) {
-                return false;
-            }
+        if (this.objQ.numberOfQuestions > this.corentQ + 1) {
+            return true;
         }
-        return true;
+        else {
+            return false;
+        }
     };
     Questionnaire.prototype.getNext = function () {
-        for (var i = 0; i <= this.arrQ.length; i++) {
-            var nextQ = void 0;
-            nextQ = this.arrQ[i];
-            return nextQ;
-        }
+        this.corentQ++;
+        return this.objQ.questions[this.corentQ - 1];
     };
-    Questionnaire.prototype.checkAnswer = function (answer) {
-        this.arrQ.myAnswer = answer;
+    Questionnaire.prototype.checkAnswer = function (myAnswer) {
+        debugger;
+        var rightAnswer = this.objQ.questions[this.corentQ - 1].getCorrectAnswer();
+        if (myAnswer == rightAnswer) {
+            this.rightA++;
+        }
+        if (this.objQ.numberOfQuestions > this.corentQ)
+            this.corentQ++;
     };
     Questionnaire.prototype.getTotalQuestions = function () {
-        return this.arrQ.length;
+        return this.corentQ;
     };
     Questionnaire.prototype.getCorrectAnswers = function () {
-        var rightA = [];
-        for (var i = 0; i <= this.arrQ.length; i++) {
-            if (this.arrQ.myAnswer == this.arrQ.answers[0]) {
-                rightA.push(i);
-            }
-        }
-        return rightA.length;
+        return this.rightA;
     };
     return Questionnaire;
 }());
 function main() {
     var cat = new QuestionsCatalog();
     var q1 = new ShortAnswerQuestion("How much legs does the spider have?", "8");
+    // q1.addCorrectAnswer("8");
     cat.addQuestion(q1);
     var q2 = new MultipleChoiceQuestion("Where is the sun rise?", "East");
     q2.addAnswer("West");
@@ -209,14 +215,16 @@ function main() {
     q2.addAnswer("South");
     cat.addQuestion(q2);
     // add more questions to the catalog
-    var qnr = new Questionnaire(5, QuestionsCatalog.BOTH);
+    // my answers
+    var myAnswer = ["8", "East"];
+    var qnr = new Questionnaire(5, QuestionsCatalog.BOTH, cat);
     console.log("Welcome to our questionnaire, its starts now!");
-    while (qnr.hasNext()) {
-        var q = qnr.getNext();
+    for (var i = 0; i < qnr.getTotalQuestions(); i++) {
+        var q = qnr.objQ.questions[i];
         console.log(q);
-        console.log("Your answer: ");
-        var answer = scan.nextLine();
+        var answer = myAnswer[i];
         qnr.checkAnswer(answer);
+        console.log("Your answer: " + answer);
     }
     console.log("Thank you for participating in our test");
     var correct = qnr.getCorrectAnswers();
