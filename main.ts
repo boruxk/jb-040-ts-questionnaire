@@ -228,7 +228,7 @@ function main() {
     // add more questions to the catalog
 
     // my answers
-    var myAnswer = ["8", "East"];
+    var myAnswer = ["8", q2.answers[0]];
 
     var qnr: Questionnaire = new Questionnaire(5, QuestionsCatalog.BOTH, cat);
     console.log("Welcome to our questionnaire, its starts now!");
